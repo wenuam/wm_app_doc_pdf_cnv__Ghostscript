@@ -1,9 +1,10 @@
+.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. All Rights Reserved.
+
 .. title:: Third Party Libraries Used by Ghostscript and GhostPDL
 
-.. meta::
-   :description: The Ghostscript documentation
-   :keywords: Ghostscript, documentation, ghostpdl
 
+.. include:: header.rst
 
 .. _thirdparty.htm:
 

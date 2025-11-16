@@ -1,9 +1,10 @@
+.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. All Rights Reserved.
+
 .. title:: Using Ghostscript
 
-.. meta::
-   :description: The Ghostscript documentation
-   :keywords: Ghostscript, documentation, ghostpdl
 
+.. include:: header.rst
 
 .. _Use.htm:
 
@@ -437,11 +438,6 @@ Switches for PDF files
 
 Here are some command line options specific to PDF:
 
-``-dNEWPDF``
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-From release 9.55.0 Ghostscript incorporates two complete PDF interpreters; the original long-standing interpreter is written in PostScript but there is now a new interpreter written in C.
-At present the old PostScript-based interpreter remains the default, in future releases the new C-based interpreter will become the default, though we would encourage people to experiment with the new interpreter and send us feedback. While there are two interpreters the command-line switch NEWPDF will allow selection of the existing interpreter when false and the new interpreter when true.
 
 ``-dPDFINFO``
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -1578,36 +1574,36 @@ whereas ``-sXYZ=35`` is equivalent to:
 
    -pFoo="<< /Bar[1 2 3]/Baz 0.1 /Whizz (string) /Bang <0123> >>"
 
-   This means that ``-p`` can do the job of both ``-d`` and ``-s``. For example:
+This means that ``-p`` can do the job of both ``-d`` and ``-s``. For example:
 
 .. code-block:: bash
 
    -dDownScaleFactor=3
 
-   can be equivalently performed by:
+can be equivalently performed by:
 
 .. code-block:: bash
 
    -pDownScaleFactor=3
 
-   and:
+and:
 
 .. code-block:: bash
 
    -sPAPERSIZE=letter
 
-   can be equivalently performed by:
+can be equivalently performed by:
 
 .. code-block:: bash
 
    -pPAPERSIZE="(letter)"
 
 
-   .. note ::
+.. note ::
 
-     There are some 'special' values that should be set using ``-s``, not ``-p``, such as ``DEVICE`` and ``DefaultGrayProfile``. Broadly, only use ``-p`` if you cannot set what you want using ``-s`` or ``-d``.
+  There are some 'special' values that should be set using ``-s``, not ``-p``, such as ``DEVICE`` and ``DefaultGrayProfile``. Broadly, only use ``-p`` if you cannot set what you want using ``-s`` or ``-d``.
 
-   Also, internally, after setting an parameter with ``-p`` we perform an ``initgraphics`` operation. This is required to allow changes in parameters such as ``HWResolution`` to take effect. This means that attempting to use ``-p`` other than at the start of a page is liable to give unexpected results.
+Also, internally, after setting an parameter with ``-p`` we perform an ``initgraphics`` operation. This is required to allow changes in parameters such as ``HWResolution`` to take effect. This means that attempting to use ``-p`` other than at the start of a page is liable to give unexpected results.
 
 
 **-u** *name*
@@ -1715,7 +1711,7 @@ Rendering parameters
 
 **-dUseCIEColor**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   Set ``UseCIEColor`` in the page device dictionary, remapping device-dependent color values through a Postscript defined CIE color space. Document ``DeviceGray``, ``DeviceRGB`` and ``DeviceCMYK`` source colors will be substituted respectively by Postscript CIEA, CIEABC and CIEDEFG color spaces. See the document `GS9 Color Management`_ for details on how this option will interact with Ghostscript's ICC-based color workflow. If accurate colors are desired, it is recommended that an ICC workflow be used.
+   Set ``UseCIEColor`` in the page device dictionary, remapping device-dependent color values through a Postscript defined CIE color space. Document ``DeviceGray``, ``DeviceRGB`` and ``DeviceCMYK`` source colors will be substituted respectively by Postscript CIEA, CIEABC and CIEDEFG color spaces. See the document :ref:`Ghostscript Color Management<GhostscriptColorManagement.htm>` for details on how this option will interact with Ghostscript's ICC-based color workflow. If accurate colors are desired, it is recommended that an ICC workflow be used.
 
 **-dNOCIE**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1785,16 +1781,14 @@ Page parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    There are three possible values for this; even, odd or a list of pages to be processed. A list can include single pages or ranges of pages. Ranges of pages use the minus sign '-', individual pages and ranges of pages are separated by commas ','. A trailing minus '-' means process all remaining pages. For example:
 
-.. code-block:: bash
-
-   -sPageList=1,3,5 indicates that pages 1, 3 and 5 should be processed.
-   -sPageList=5-10 indicates that pages 5, 6, 7, 8, 9 and 10 should be processed.
-   -sPageList=1, 5-10, 12- indicates that pages 1, 5, 6, 7, 8, 9, 10 and 12 onwards should be processed.
+   - ``-sPageList=1,3,5`` indicates that pages 1, 3 and 5 should be processed.
+   - ``-sPageList=5-10`` indicates that pages 5, 6, 7, 8, 9 and 10 should be processed.
+   - ``-sPageList=1, 5-10, 12`` indicates that pages 1, 5, 6, 7, 8, 9, 10 and 12 onwards should be processed.
 
 
-   The PDF interpreter and the other language interpreters handle these in slightly different ways. Because PDF files enable random access to pages in the document the PDF inerpreter only interprets and renders the required pages. PCL and PostScript cannot be handled in ths way, and so all the pages must be interpreted. However only the requested pages are rendered, which can still lead to savings in time. Be aware that using the '``%d``' syntax for ``OutputFile`` does not reflect the page number in the original document. If you chose (for example) to process even pages by using ``-sPageList=even``, then the output of ``-sOutputFile=out%d.png`` would still be ``out0.png``, ``out1.png``, ``out2.png`` etc.
+The PDF interpreter and the other language interpreters handle these in slightly different ways. Because PDF files enable random access to pages in the document the PDF inerpreter only interprets and renders the required pages. PCL and PostScript cannot be handled in ths way, and so all the pages must be interpreted. However only the requested pages are rendered, which can still lead to savings in time. Be aware that using the '``%d``' syntax for ``OutputFile`` does not reflect the page number in the original document. If you chose (for example) to process even pages by using ``-sPageList=even``, then the output of ``-sOutputFile=out%d.png`` would still be ``out0.png``, ``out1.png``, ``out2.png`` etc.
 
-   Because the PostScript and PCL interpreters cannot determine when a document terminates, sending multple files as input on the command line does not reset the ``PageList`` between each document, each page in the second and subsequent documents is treated as following on directly from the last page in the first document. The PDF interpreter, however, does not work this way. Since it knows about individual PDF files the ``PageList`` is applied to each PDF file separately. So if you were to set ``-sPageList=1,2`` and then send two PDF files, the result would be pages 1 and 2 from the first file, and then pages 1 and 2 from the second file. The PostScript interpreter, by contrast, would only render pages 1 and 2 from the first file. This means you must exercise caution when using this switch, and probably should not use it at all when processing a mixture of PostScript and PDF files on the same command line.
+Because the PostScript and PCL interpreters cannot determine when a document terminates, sending multple files as input on the command line does not reset the ``PageList`` between each document, each page in the second and subsequent documents is treated as following on directly from the last page in the first document. The PDF interpreter, however, does not work this way. Since it knows about individual PDF files the ``PageList`` is applied to each PDF file separately. So if you were to set ``-sPageList=1,2`` and then send two PDF files, the result would be pages 1 and 2 from the first file, and then pages 1 and 2 from the second file. The PostScript interpreter, by contrast, would only render pages 1 and 2 from the first file. This means you must exercise caution when using this switch, and probably should not use it at all when processing a mixture of PostScript and PDF files on the same command line.
 
 .. _FIXEDMEDIA:
 
@@ -2287,7 +2281,7 @@ Other parameters
    Enables access controls on files. Access controls fall into three categories, files from which Ghostscript is permitted to read, ones to which it is permitted to write, and ones over which it has "control" (i.e. delete/rename). These access controls apply to all files accessed via Ghostscript's internal interface to the C library file handling. Whilst we have taken considerable pains to ensure that all the code we maintain (as well as the so called "contrib" devices, that are devices included in our release packages, but not strictly maintained by the Ghostscript development team) uses this interface, we have no control over thirdparty code.
 
 
-   This is an entirely new implementation of ``SAFER`` for Ghostscript versions 9.50 and later. Earlier versions (see :ref:`-dOLDSAFER<dOLDSAFER>`) relied on storing the file permission lists in Postscript VM (Virtual Memory), and only applied file access permissions to the Postscript file related operators. It relied on restricting the function of setpagedevice to avoid the device code from being manipulated into opening arbitrary files. The application of the file permissions was done within the internal context of the Postscript interpreter, and some other aspects of the Postscript restrictions were applied in the Postscript environment. With so many of the feature's capabilities relying on the Postscript context and environment, by using other (Ghostscript specific) features maliciously, the restrictions could be overridden.
+   This is an entirely new implementation of ``SAFER`` for Ghostscript versions 9.50 and later. Earlier versions relied on storing the file permission lists in Postscript VM (Virtual Memory), and only applied file access permissions to the Postscript file related operators. It relied on restricting the function of setpagedevice to avoid the device code from being manipulated into opening arbitrary files. The application of the file permissions was done within the internal context of the Postscript interpreter, and some other aspects of the Postscript restrictions were applied in the Postscript environment. With so many of the feature's capabilities relying on the Postscript context and environment, by using other (Ghostscript specific) features maliciously, the restrictions could be overridden.
 
    Whilst the path storage and application of the permissions is implemented entirely in C, it is still possible for Postscript to add and remove paths from the permissions lists (see .addcontrolpath) until such time as the access controls are enabled (see :ref:`.activatepathcontrol<Language_ActivateControlPath>`), any call to :ref:`.addcontrolpath<Language_AddControlPath>` after :ref:`.activatepathcontrol<Language_ActivateControlPath>` will result in a ``Fatal`` error causing the interpreter to immediately exit.
 
@@ -2362,25 +2356,6 @@ Other parameters
 
    Finally, paths supplied on the command line (such as those in ``-I``, ``-sFONTPATH`` parameters) are added to the permitted reading list. Similarly, paths read during initialisation from ``Fontmap``, ``cidfmap``, and the platform specific font file enumeration (e.g. ``fontconfig`` on Unix systems) are automatically added to the permit read lists.
 
-
-
-
-.. _dOLDSAFER:
-
-**-dOLDSAFER**
-^^^^^^^^^^^^^^^^^^
-
-   .. important :: This enables deprecated code which will shortly be removed.
-
-   Used in combination with ``-dSAFER`` (or ``.setsafe``) enables the pre-9.50 ``SAFER`` implementation. It is included (for now) in case any users find a case where the 9.50 and later ``SAFER`` does not work for them. It means such users can keep working until we have assessed the issue, and distributed a solution.
-
-   Disables the ``deletefile`` and ``renamefile`` operators, and the ability to open piped commands (``%pipe%cmd``) at all. Only ``%stdout`` and ``%stderr`` can be opened for writing. Disables reading of files other than ``%stdin``, those given as a command line argument, or those contained on one of the paths given by ``LIBPATH`` and ``FONTPATH`` and specified by the system params ``/FontResourceDir`` and ``/GenericResourceDir``.
-
-   This mode also sets the :ref:`.LockSafetyParams<Language_LockSafetyParams>` parameter of the default device, or the device specified with the ``-sDEVICE=`` switch to protect against programs that attempt to write to files using the ``OutputFile`` device parameter. Note that since the device parameters specified on the command line (including ``OutputFile``) are set prior to ``SAFER`` mode, the ``-sOutputFile=...`` on the command line is unrestricted.
-
-   ``SAFER`` mode also prevents changing the ``/GenericResourceDir``, ``/FontResourceDir`` and either the ``/SystemParamsPassword`` or the ``/StartJobPassword``.
-
-   When running ``-dNOSAFER`` it is possible to perform a save, followed by ``.setsafe``, execute a file or procedure in ``SAFER`` mode, then use restore to return to ``NOSAFER`` mode. It is possible that a crafted foreign file could restore back to a point when ``NOSAFER`` was in operation.
 
 **-dPreBandThreshold=** *true/false*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

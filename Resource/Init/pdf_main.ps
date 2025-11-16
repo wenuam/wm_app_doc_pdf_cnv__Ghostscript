@@ -1,4 +1,4 @@
-% Copyright (C) 2001-2022 Artifex Software, Inc.
+% Copyright (C) 2001-2023 Artifex Software, Inc.
 % All Rights Reserved.
 %
 % This software is provided AS-IS with no warranty, either express or
@@ -218,7 +218,7 @@ DingbatsEncoding pop
 % Redefine 'run' so it recognizes PDF files.
 systemdict begin
 
-systemdict /NEWPDF known not {/NEWPDF //true def} if
+systemdict /OLDPDF known not {/OLDPDF //false def} if
 
 % PostScript interface to the ghostpdf C-based interpreter
 %
@@ -411,11 +411,6 @@ systemdict /NEWPDF known not {/NEWPDF //true def} if
       exch                                      % swap media width/height for scaling calculation
     }if
 
-    % Stack - box boxwidth boxheight mediawidth mediaheight
-    % Incorporate up any offset from 0,0
-    4 index aload pop pop pop neg exch neg
-    translate
-
     % Now use the box and media values to calculate the required x/y scale factors
     4 copy                              % Stack - box boxwidth boxheight mediawidth mediaheight boxwidth boxheight mediawidth mediaheight
     3 -1 roll div                       % box boxwidth boxheight mediawidth mediaheight boxwidth mediawidth (mediaheight / boxheight)
@@ -442,6 +437,14 @@ systemdict /NEWPDF known not {/NEWPDF //true def} if
       dup 0 ne {2 div} if               % box boxwidth boxheight mediawidth Yscale (widthdiff / 2)
       0 translate                       % box boxwidth boxheight mediawidth Yscale
     } ifelse
+
+    % Apply any 'offset' in the Box. Tht is, if the llx and lly are not 0, then we need to
+    % shift the origin of the content so that they become 0,0. We need to take into
+    % account the scaling from above.
+    4 index aload pop pop pop
+    neg 2 index mul exch neg 2 index mul exch
+    translate
+
     dup scale                           % scale both axes the same
     pop pop pop                         % remove the leftover boxwidth, boxheight and mediawidth/height
 } bind def
@@ -670,18 +673,27 @@ systemdict /NEWPDF known not {/NEWPDF //true def} if
       }
       {
         2 index /UserUnit get
-        % The PageSize needs to be multiplied too
-        exch aload 5 1 roll % UserUnit box llx lly urx ury
-        2 index sub exch    % UserUnit box llx lly (ury - lly) urx
-        3 index sub         % UserUnit box llx lly boxheight boxwidth
-        5 index mul         % UserUnit box llx lly boxheight (Boxwidth*UserUnit)
-        exch
-        5 index mul         % UserUnit box llx lly (Boxwidth*UserUnit) (boxheight*UserUnit)
-        4 -2 roll
-        5 index mul exch    % UserUnit box (Boxwidth*UserUnit) (boxheight*UserUnit) (lly*UserUnit) llx
-        5 index mul exch    % UserUnit box (Boxwidth*UserUnit) (boxheight*UserUnit) (llx*UserUnit) (lly*UserUnit)
-        4 2 roll            % UserUnit box (llx*UserUnit) (lly*UserUnit) (Boxwidth*UserUnit) (boxheight*UserUnit)
-        6 -1 roll pop       % box (llx*UserUnit) (lly*UserUnit) (Boxwidth*UserUnit) (boxheight*UserUnit)
+        /PassUserUnit /GetDeviceParam .special_op {exch pop} {//false} ifelse {
+          [ /UserUnit 3 -1 roll .pdfputparams pop pop
+          % No media scaling required, calculate PageSize as the width and height of the box
+          aload 5 1 roll      % box llx lly urx ury
+          2 index sub         % box llx lly urx (ury - lly)
+          exch 3 index sub    % box llx lly (ury - lly) (urx - llx)
+          exch
+        }{
+          % The PageSize needs to be multiplied too
+          exch aload 5 1 roll % UserUnit box llx lly urx ury
+          2 index sub exch    % UserUnit box llx lly (ury - lly) urx
+          3 index sub         % UserUnit box llx lly boxheight boxwidth
+          5 index mul         % UserUnit box llx lly boxheight (Boxwidth*UserUnit)
+          exch
+          5 index mul         % UserUnit box llx lly (Boxwidth*UserUnit) (boxheight*UserUnit)
+          4 -2 roll
+          5 index mul exch    % UserUnit box (Boxwidth*UserUnit) (boxheight*UserUnit) (lly*UserUnit) llx
+          5 index mul exch    % UserUnit box (Boxwidth*UserUnit) (boxheight*UserUnit) (llx*UserUnit) (lly*UserUnit)
+          4 2 roll            % UserUnit box (llx*UserUnit) (lly*UserUnit) (Boxwidth*UserUnit) (boxheight*UserUnit)
+          6 -1 roll pop       % box (llx*UserUnit) (lly*UserUnit) (Boxwidth*UserUnit) (boxheight*UserUnit)
+        } ifelse
       } ifelse
     }
     {
@@ -765,8 +777,18 @@ systemdict /NEWPDF known not {/NEWPDF //true def} if
     //systemdict /NoUserUnit .knownget not { //false } if not
     {
       2 index /UserUnit known {
-        2 index /UserUnit get
-        dup scale
+        /PassUserUnit /GetDeviceParam .special_op {
+          exch pop not
+        } {
+          true
+        }ifelse
+
+        % If PassUserUnit isn't handled by the device, or it returns 'false'
+        % then scale the content by the UserUnit. Otherwise do not scale.
+        {
+          2 index /UserUnit get
+          dup scale
+        } if
       } if
     } if
   } ifelse
@@ -774,7 +796,7 @@ systemdict /NEWPDF known not {/NEWPDF //true def} if
   pop % The box
 
   % If we are using the MediaBox (and only the MediaBox) then we
-  % want to clip to the CropBox, if there s one present
+  % want to clip to the CropBox, if there is one present
 
   /MediaBox eq {
     dup /CropBox known {
@@ -801,8 +823,8 @@ systemdict /NEWPDF known not {/NEWPDF //true def} if
 /PDFSwitches [ /QUIET /PDFPassword /PDFDEBUG /PDFSTOPONERROR /PDFSTOPONWARNING /NOTRANSPARENCY /FirstPage /LastPage
                /PDFNOCIDFALLBACK /NO_PDFMARK_OUTLINES /NO_PDFMARK_DESTS /PDFFitPage /Printed /UsePDFX3Profile
                /UseBleedBox /UseCropBox /UseArtBox /UseTrimBox /ShowAcroForm /ShowAnnots /PreserveAnnots
-               /NoUserUnit /RENDERTTNOTDEF /DOPDFMARKS /PDFINFO /SHOWANNOTTYPES /PRESERVEANNOTTYPES
-               /CIDFSubstPath /CIDFSubstFont /SUBSTFONT /IgnoreToUnicode /NONATIVEFONTMAP ] def
+               /NoUserUnit /RENDERTTNOTDEF /DOPDFMARKS /PDFINFO /ShowAnnotTypes /PreserveAnnotTypes
+               /CIDFSubstPath /CIDFSubstFont /SUBSTFONT /IgnoreToUnicode /NONATIVEFONTMAP /PreserveMarkedContent ] def
 
 /newpdf_gather_parameters
 {
@@ -817,7 +839,7 @@ systemdict /NEWPDF known not {/NEWPDF //true def} if
   % This isn't a command line parameter, we track it internally, but we need to
   % send it to the interpreter. It is used to 'offset' the page Dest for Link
   % annotations and Outlines by the numebr of pages processed so far.
-  /PageCount CumulativePageCount def
+  /PageCount /CumulativePageCount where { /CumulativePageCount get }{currentpagedevice /PageCount get} ifelse def
 
   currentdict end
 } bind executeonly def
@@ -1013,7 +1035,6 @@ currentdict /PDFSwitches undef
 
 /newpdf_pdfshowpage_init
 {
-    gsave
 } bind def
 
 /newpdf_pdfshowpage_setpage
@@ -1042,7 +1063,6 @@ currentdict /PDFSwitches undef
       (               Could not draw this page at all, page will be missing in the output.\n) newpdf_pdfformaterror
     } if
   }ifelse
-  grestore
 } bind def
 
 /newpdf_pdfshowpage
@@ -1129,7 +1149,7 @@ currentdict /PDFSwitches undef
 
 /pdfavailable
 {
-  .PDFAvailable NEWPDF not or
+  .PDFAvailable OLDPDF or
 } bind def
 
 % <int> <int> dopdfpages -
@@ -1218,6 +1238,9 @@ currentdict /PDFSwitches undef
             (%stderr) (w) file dup
             (   **** Warning: File has some garbage before %PDF- .\n)
             writestring flushfile
+            PDFSTOPONWARNING {
+              /run cvx /unregistered signalerror
+            } if
           } {
             pop
           } ifelse
@@ -1266,12 +1289,11 @@ currentdict /PDFSwitches undef
 currentdict /runpdfstring .undef
 
 /runpdfbegin {        % <file> runpdfbegin -
-  /NEWPDF where {/NEWPDF get} {//true} ifelse
+  /OLDPDF where {/OLDPDF get not} {//true} ifelse
   {
     newpdf_runpdfbegin
   }
   {
-   (%stderr) (w) file (\n   **** Warning: You are using the legacy PDF interpreter \(-dNEWPDF=false\) which is now deprecated and unsupported\n) writestring
    userdict begin
         % It turns out that the PDF interpreter uses memory more
         % effectively if it is run under at least one level of save.
@@ -1311,7 +1333,7 @@ currentdict /runpdfstring .undef
 
 
 /runpdfpagerange {    % - runpdfpagerange <firstpage#> <lastpage#>
-  /NEWPDF where {/NEWPDF get} {//true} ifelse
+  /OLDPDF where {/OLDPDF get not} {//true} ifelse
   {
     newpdf_runpdfpagerange
   }
@@ -1499,7 +1521,7 @@ currentdict /runpdfstring .undef
 } bind executeonly def
 
 /dopdfpages {   % firstpage# lastpage# dopdfpages -
-  /NEWPDF where {/NEWPDF get} {//true} ifelse
+  /OLDPDF where {/OLDPDF get not} {//true} ifelse
   {
     newpdf_dopdfpages
   }
@@ -1542,7 +1564,7 @@ currentdict /runpdfstring .undef
 } bind executeonly def
 
 /runpdfend {
-  /NEWPDF where {/NEWPDF get} {//true} ifelse
+  /OLDPDF where {/OLDPDF get not} {//true} ifelse
   {
     newpdf_runpdfend
   }
@@ -1648,7 +1670,7 @@ currentdict /EnablePageHandlerDevice undef
 } bind executeonly def
 
 /runpdf {        % <file> runpdf -
-  /NEWPDF where {/NEWPDF get} {//true} ifelse
+  /OLDPDF where {/OLDPDF get not} {//true} ifelse
   {
     dup type /filetype eq
     {
@@ -2148,7 +2170,7 @@ currentdict /xref-char-dict undef
 
 % Open a PDF file and read the header, trailer, and cross-reference.
 /pdfopen {        % <file> pdfopen <dict>
-  /NEWPDF where {/NEWPDF get} {//true} ifelse
+  /OLDPDF where {/OLDPDF get not} {//true} ifelse
   {
     newpdf_pdfopen
   }

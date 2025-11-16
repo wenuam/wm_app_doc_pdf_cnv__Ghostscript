@@ -1,11 +1,11 @@
+.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. All Rights Reserved.
+
 .. title:: Language Bindings
 
-.. meta::
-   :description: The Ghostscript documentation
-   :keywords: Ghostscript, documentation, ghostpdl
 
 
-
+.. include:: header.rst
 
 
 Language Bindings

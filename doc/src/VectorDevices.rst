@@ -1,9 +1,10 @@
+.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. All Rights Reserved.
+
 .. title:: High Level Devices
 
-.. meta::
-   :description: The Ghostscript documentation
-   :keywords: Ghostscript, documentation, ghostpdl
 
+.. include:: header.rst
 
 .. _VectorDevices.htm:
 
@@ -104,8 +105,42 @@ The options in the command line may include any switches that may be used with t
 ``-dUNROLLFORMS``
    When converting from PostScript, :title:`pdfwrite` (and :title:`ps2write`) preserve the use of Form resources as Form XObjects in the output. Some badly written PostScript can cause this to produce incorrect output (the Quality Logic CET tests for example). By setting this flag, forms will be unrolled and stored in the output each time they are used, which avoids the problems. Note that the output file will of course be larger this way. We do not attempt to preserve Form XObjects from PDF files, unless they are associated with transparency groups.
 
+
+.. _VectorDevices_NoOutputFonts:
+
 ``-dNoOutputFonts``
    Ordinarily the :title:`pdfwrite` device family goes to considerable lengths to preserve fonts from the input as fonts in the output. However in some highly specific cases it can be useful to have the text emitted as linework/bitmaps instead. Setting this switch will prevent these devices from emitting any fonts, all text will be stored as vectors (or bitmaps in the case of bitmapped fonts) in the page content stream. Note that this will produce larger output which will process more slowly, render differently and particularly at lower resolution produce less consistent text rendering. Use with caution.
+
+  **PostScript device parameters**
+
+  These controls can only be set from PostScript as they require a PostScript array to contain the names of the fonts.
+
+
+  ``AlwaysOutline``
+    Similar to the :ref:`-dNoOutputFonts<VectorDevices_NoOutputFonts>` control, this can be used to control whether text is converted into linework or preserved as a font, based on the name. Text using a font which is listed in the ``AlwaysOutline`` array will always be converted into linework and the font will not be embedded in the output.
+
+    Example usage:
+
+    .. code-block:: c
+
+      gs -sDEVICE=pdfwrite -o out.pdf -c "<< /AlwaysOutline [/Calibri (Comic Sans) cvn] >> setdistillerparams" -f input.pdf
+
+
+  ``NeverOutline``
+    Associated with the :ref:`-dNoOutputFonts<VectorDevices_NoOutputFonts>` control, this can be used to control whether text is converted into linework or preserved as a font, based on the name. When :ref:`-dNoOutputFonts<VectorDevices_NoOutputFonts>` is set to `true`, text using a font which is listed in the ``NeverOutline`` array will not be converted into linework but will continue to use a font, which will be embedded in the output, subject to the embedding rules.
+
+    Example usage:
+
+    .. code-block:: c
+
+      gs -sDEVICE=pdfwrite -o out.pdf -dNoOutputFonts -c"<< /NeverOutline [/Calibri (Conic Sans) cvn] >> setdistillerparams" -f input.pdf
+
+
+    .. note::
+
+      When using ``NeverOutline``, if :ref:`-dNoOutputFonts<VectorDevices_NoOutputFonts>` is not set to `true` then this control will have no effect.
+
+
 
 ``-dCompressFonts=boolean``
    Defines whether :title:`pdfwrite` will compress embedded fonts in the output. The default value is true; the false setting is intended only for debugging as it will result in larger output.
@@ -930,7 +965,7 @@ Example using DISTILLERPARAMS to set the quality of JPEG compression
 
 
 
-PDF file output
+PDF file output - ``pdfwrite``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``-dMaxInlineImageSize=integer``
@@ -962,15 +997,17 @@ PDF file output
 
    This control also requires the PDF interpreter to pass the marked content to the :title:`pdfwrite` device, this is only done with the new (C-based) PDF interpreter. The old (PostScript-based) interpreter does not support this feature and will not pass marked content to the :title:`pdfwrite` device.
 
-``-dOmitInfoDateboolean``
+``-dOmitInfoDate=boolean``
    Under some conditions the ``CreationDate`` and ``ModDate`` in the ``/Info`` dictionary are optional and can be omitted. They are required when producing PDF/X output however. This control will allow the user to omit the ``/CreationDate`` and ``/ModDate`` entries in the ``Info`` dictionary (and the corresponding information in the XMP metadata, if present). If you try to set this control when writing PDF/X output, the device will give a warning and ignore this control.
 
-``-dOmitIDboolean``
+``-dOmitID=boolean``
    Under some conditions the ``/ID`` array trailer dictionary is optional and can be omitted. It is required when producing PDF 2.0, or encrypted PDFs however. This control will allow the user to omit the ``/ID`` entry in the trailer dictionary. If you try to set this control when writing PDF 2.0 or encrypted PDF output, the device will give a warning and ignore this control.
 
-``-dOmitXMPboolean``
+``-dOmitXMP=boolean``
    Under some conditions the XMP ``/Metadata`` entry in the ``Catalog`` dictionary is optional and can be omitted. It is required when producing PDF/A output however. This control will allow the user to omit the ``/Metadata`` entry in the ``Catalog`` dictionary. If you try to set this control when writing PDF/A output, the device will give a warning and ignore this control.
 
+``-dNO_PDFMARK_OUTLINES``
+  When the input is a PDF file which has an ``/Outlines`` tree (called "Bookmarks" in Adobe Acrobat) these are normally turned into ``pdfmarks`` and sent to the ``pdfwrite`` device so that they are preserved in the output PDF file. However, if this control is set then the interpreter will ignore the Outlines in the input.
 
 
 The following options are useful for creating PDF 1.2 files:
@@ -1080,7 +1117,25 @@ The following switches are used for generating metadata according to the Adobe X
 
    Obviously this is all heuristic and undoubtedly there is more we can do to improve the functionality here, but we need concrete examples to work from.
 
+----
 
+
+:title:`pdfwrite` for the new interpreter
+"""""""""""""""""""""""""""""""""""""""""""""""
+
+Using the new interpreter (the default from version 10.0.0 of :title:`Ghostscript`) these can be set from the command line using ``-d`` or from :title:`PostScript` using the :ref:`setpagedevice<Language_DeviceParameters>` operator:
+
+
+``-dModifiesPageSize=boolean``
+  When this device parameter is *true* the new :title:`PDF` interpreter will not pass the various Box values (:title:`ArtBox`, :title:`BleedBox`, :title:`CropBox`, :title:`TrimBox`) to the output device. This is used when scripting the interpreter and using a media size other than the :title:`MediaBox` in the :title:`PDF` file. If the media size has changed and we preserve the :title:`Boxes` in the output they would be incorrect.
+
+``-dModifiesPageOrder=boolean``
+  When this device parameter is *true* the new :title:`PDF` interpreter will not pass :title:`Outlines` (what :title:`Acrobat` calls :title:`Bookmarks`) and :title:`Dests` (the destination of document-local hyperlinks for example). This is because these rely on specifying the page by number, and if we alter the page order the destination would be incorrect. Again this is intended for use when scripting the interpreter.
+
+
+.. note::
+
+  The :title:`Nup` device already sets these parameters internally (and they cannot be changed in that device) as it modifies both the media size and the order of pages, the ``pdfwrite`` device now supports both these parameters and they can be altered as required.
 
 PostScript file output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

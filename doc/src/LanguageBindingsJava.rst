@@ -1,10 +1,10 @@
+.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. All Rights Reserved.
+
 .. title:: Java
 
-.. meta::
-   :description: The Ghostscript documentation
-   :keywords: Ghostscript, documentation, ghostpdl
 
-
+.. include:: header.rst
 
 Introduction
 ==============
@@ -26,7 +26,7 @@ Platform & setup
 
 Ghostscript should be built as a shared library for your platform.
 
-See :ref:`Building Ghostscript<Building Ghostscript>`.
+See :ref:`Building Ghostscript<Make.htm>`.
 
 
 

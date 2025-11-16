@@ -1,3 +1,8 @@
+.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. All Rights Reserved.
+
+.. include:: header.rst
+
 Table of Contents
 ========================================
 
@@ -20,19 +25,9 @@ Table of Contents
    Ps2epsi.rst
    Psfiles.rst
    Fonts.rst
+   GhostscriptColorManagement.rst
    Unix-lpr.rst
    News.rst
    Source.rst
    thirdparty.rst
    UnsupportedDevices.rst
-
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

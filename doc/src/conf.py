@@ -49,7 +49,7 @@ copyright = "1988-2022, Artifex"
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = "10.0.0"
+release = "10.01.0"
 
 # The short X.Y version
 version = release
@@ -124,7 +124,7 @@ html_logo = "_static/ghostscript-white-plus-text.png"
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = "_static/favicon.svg"
+html_favicon = "_static/favicon.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -187,14 +187,22 @@ htmlhelp_basename = "Ghostscript"
 
 
 # -- Options for LaTeX output ---------------------------------------------
+# This ensures that the ≥ character (Unicode character ≥ = U+2265) will
+# render correctly in the PDF
 latex_elements = {
+    "preamble" : r'''
+\ifdefined\sphinxDUC
+  \sphinxDUC{2265}{\ensuremath{\ge}}
+\fi
+''',
+
     # "fontpkg": r"\usepackage[sfdefault]{ClearSans} \usepackage[T1]{fontenc}"
 }
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ("index", "Ghostscript.tex", u"Ghostscript Documentation", u"Artifex", "manual")
+    ("toc", "Ghostscript.tex", u"Ghostscript Documentation", u"Artifex", "manual")
 ]
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
@@ -220,7 +228,7 @@ latex_domain_indices = True
 # Grouping the document tree into PDF files. List of tuples
 # (source start file, target name, title, author).
 
-pdf_documents = [("index", "Ghostscript", "Ghostscript Manual", "Artifex")]
+pdf_documents = [("toc", "Ghostscript", "Ghostscript Manual", "Artifex")]
 
 # A comma-separated list of custom stylesheets. Example:
 #pdf_stylesheets = ["sphinx", "bahnschrift", "a4"]

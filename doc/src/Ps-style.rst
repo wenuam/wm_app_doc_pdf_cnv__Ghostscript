@@ -1,9 +1,10 @@
+.. Copyright (C) 2001-2022 Artifex Software, Inc.
+.. All Rights Reserved.
+
 .. title:: Ghostscript PostScript Coding Guidelines
 
-.. meta::
-   :description: The Ghostscript documentation
-   :keywords: Ghostscript, documentation, ghostpdl
 
+.. include:: header.rst
 
 .. _Ps-style.htm:
 
